@@ -333,3 +333,44 @@
 - name: Remove backports.lzma if previously installed (pip)
   pip: name=backports.lzma state=absent
   when: backports_lzma_pip is changed
+
+- name: Prep files
+  copy: src={{ item }} dest={{output_dir}}/{{ item }}
+  with_items:
+    - foo.txt
+    - bar.txt
+
+- name: Find directories
+  find:
+    paths: "{{output_dir}}"
+    recurse: no
+    file_type: directory
+  register: dirs_to_archive
+
+- name: Debug dirs_to_archive
+  debug: msg="{{ dirs_to_archive }}"
+
+- name: archive directory
+  archive:
+    path: "{{item.path}}"
+    dest: "{{output_dir}}/directory_archive.tar.bz2"
+    format: bz2
+    remove: no
+  with_items:
+    - "{{dirs_to_archive.files}}"
+  register: archive_directory_result
+
+- debug: msg="{{ archive_directory_result }}"
+
+- name: stat archive 
+  stat: path="{{output_dir}}/directory_archive.tar.bz2"
+  register: archive_directory_stat
+
+- debug: msg="{{ archive_directory_stat }}"
+
+- name: assert that archive exists and is non-empty
+  assert:
+    that:
+      - "archive_directory_stat.stat.exists"
+      - "archive_directory_stat.stat.size > 0"
+
