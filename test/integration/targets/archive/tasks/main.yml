@@ -334,11 +334,11 @@
   pip: name=backports.lzma state=absent
   when: backports_lzma_pip is changed
 
-- name: Prep files
-  copy: src={{ item }} dest={{output_dir}}/{{ item }}
-  with_items:
-    - foo.txt
-    - bar.txt
+- name: Set test directory name
+  set_fact: timestamp_file="2018-06-01T11:07:06,797112829+00:00"
+
+- name: Make timestamped subdirectory
+  file: path="{{output_dir}}/{{timestamp_file}}" state=directory
 
 - name: Find directories
   find:
@@ -353,7 +353,7 @@
 - name: archive directory
   archive:
     path: "{{item.path}}"
-    dest: "{{output_dir}}/directory_archive.tar.bz2"
+    dest: "{{item.path}}.tar.bz2"
     format: bz2
     remove: no
   with_items:
@@ -363,7 +363,7 @@
 - debug: msg="{{ archive_directory_result }}"
 
 - name: stat archive 
-  stat: path="{{output_dir}}/directory_archive.tar.bz2"
+  stat: path="{{output_dir}}/{{timestamp_file}}.tar.bz2"
   register: archive_directory_stat
 
 - debug: msg="{{ archive_directory_stat }}"
